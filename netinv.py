@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 NetInv - Network Inventory Tool
 Full CLI network scanner with blue aesthetics
@@ -16,18 +15,16 @@ import csv
 import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# ─── ANSI COLOR CODES ────────────────────────────────────────────────────────
 RESET   = "\033[0m"
 BOLD    = "\033[1m"
 DIM     = "\033[2m"
 
-# Blues palette
-B1      = "\033[38;5;27m"   # Deep blue
-B2      = "\033[38;5;33m"   # Medium blue
-B3      = "\033[38;5;39m"   # Bright blue
-B4      = "\033[38;5;45m"   # Cyan-blue
-B5      = "\033[38;5;51m"   # Light cyan
-BG      = "\033[48;5;17m"   # Dark blue background
+B1      = "\033[38;5;27m"  
+B2      = "\033[38;5;33m"  
+B3      = "\033[38;5;39m"   
+B4      = "\033[38;5;45m"   
+B5      = "\033[38;5;51m"  
+BG      = "\033[48;5;17m" 
 
 WHITE   = "\033[97m"
 GRAY    = "\033[38;5;244m"
@@ -36,7 +33,6 @@ RED     = "\033[38;5;196m"
 YELLOW  = "\033[38;5;220m"
 ORANGE  = "\033[38;5;208m"
 
-# ─── ASCII ART ───────────────────────────────────────────────────────────────
 BANNER = f"""
 {B1}╔═══════════════════════════════════════════════════════════════════════╗{RESET}
 {B1}║{B2}  ███╗   ██╗███████╗████████╗██╗███╗   ██╗██╗   ██╗{B3}  ██╗   ██╗ ██╗{B1}  ║{RESET}
@@ -55,7 +51,6 @@ MINI_BANNER = f"""
 {B2}└─────────────────────────────────────────────┘{RESET}
 """
 
-# ─── COMMON PORTS ────────────────────────────────────────────────────────────
 COMMON_PORTS = {
     21: "FTP", 22: "SSH", 23: "Telnet", 25: "SMTP",
     53: "DNS", 80: "HTTP", 110: "POP3", 143: "IMAP",
@@ -64,7 +59,6 @@ COMMON_PORTS = {
     8443: "HTTPS-Alt", 27017: "MongoDB", 6379: "Redis",
 }
 
-# ─── SPINNER / ANIMATION ─────────────────────────────────────────────────────
 class Spinner:
     def __init__(self, message="Scanning"):
         self.message = message
@@ -106,7 +100,6 @@ def progress_bar(current, total, width=40, label=""):
     sys.stdout.write(f"\r  [{bar}] {pct_str}  {GRAY}{label}{RESET}  ")
     sys.stdout.flush()
 
-# ─── SEPARATOR / UI HELPERS ──────────────────────────────────────────────────
 def sep(char="─", width=73, color=B1):
     print(f"{color}{char * width}{RESET}")
 
@@ -141,7 +134,6 @@ def menu_item(num, title, desc=""):
     d = f"{GRAY}  {desc}{RESET}" if desc else ""
     print(f"  {n}  {t}{d}")
 
-# ─── NETWORK SCANNING ────────────────────────────────────────────────────────
 
 def resolve_hostname(ip):
     try:
@@ -152,7 +144,7 @@ def resolve_hostname(ip):
 def ping_host(ip, timeout=1):
     """Ping a host using socket (cross-platform fallback)."""
     try:
-        # Try ICMP via subprocess
+    
         param = "-n" if os.name == "nt" else "-c"
         result = subprocess.run(
             ["ping", param, "1", "-W", str(timeout), str(ip)],
@@ -163,7 +155,7 @@ def ping_host(ip, timeout=1):
         return result.returncode == 0
     except:
         pass
-    # Fallback: TCP connect to port 80 or 443
+
     for port in [80, 443, 22, 445]:
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -231,7 +223,6 @@ def scan_network(cidr, ping_timeout=1, workers=100, on_progress=None):
 
     return sorted(results, key=lambda x: ipaddress.ip_address(x["ip"]))
 
-# ─── REPORT GENERATION ───────────────────────────────────────────────────────
 
 def report_json(results, cidr, filename=None):
     data = {
@@ -287,8 +278,6 @@ def report_txt(results, cidr, filename=None):
 def timestamp():
     return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-# ─── DISPLAY TABLE ───────────────────────────────────────────────────────────
-
 def print_results_table(results):
     if not results:
         warn("Nenhum host encontrado na rede.")
@@ -322,7 +311,6 @@ def print_port_detail(host):
         print(f"  {B1}│{RESET} {GREEN}{str(p):<7}{RESET}{B1}│{RESET} {WHITE}{svc:<17}{RESET}{B1}│{RESET}")
     print(f"  {B1}└{'─'*8}┴{'─'*18}┘{RESET}")
 
-# ─── SCREENS / FLOWS ─────────────────────────────────────────────────────────
 
 def screen_scan():
     header("ESCANEAMENTO DE REDE")
@@ -331,7 +319,7 @@ def screen_scan():
         err("Endereço inválido.")
         return None, None
 
-    # Validate
+
     try:
         net = ipaddress.ip_network(cidr, strict=False)
         total_hosts = net.num_addresses - 2
@@ -349,7 +337,7 @@ def screen_scan():
     info(f"Scan de portas: {'Sim' if do_ports else 'Não'}")
     print()
 
-    # Host discovery
+
     results = []
     start_time = time.time()
 
@@ -367,7 +355,6 @@ def screen_scan():
     progress_bar(total_hosts, total_hosts, label="Concluído")
     print(f"\n  {GREEN}✔{RESET} {len(results)} host(s) online encontrado(s)\n")
 
-    # Port scanning
     if do_ports and results:
         print(f"  {B2}Fase 2: Escaneamento de portas...{RESET}\n")
         for i, host in enumerate(results):
@@ -524,8 +511,6 @@ def screen_about():
   {GRAY}Licença: MIT{RESET}
     """)
     sep()
-
-# ─── MAIN MENU ───────────────────────────────────────────────────────────────
 
 def main():
     os.system("cls" if os.name == "nt" else "clear")
